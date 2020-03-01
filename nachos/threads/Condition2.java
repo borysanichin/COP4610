@@ -1,5 +1,7 @@
 package nachos.threads;
 
+import java.util.LinkedList;
+
 import nachos.machine.*;
 
 /**
@@ -22,6 +24,7 @@ public class Condition2 {
      */
     public Condition2(Lock conditionLock) {
 	this.conditionLock = conditionLock;
+	waitQueue = new LinkedList<KThread>();
     }
 
     /**
@@ -55,4 +58,5 @@ public class Condition2 {
     }
 
     private Lock conditionLock;
+    private LinkedList<KThread> waitQueue;
 }
