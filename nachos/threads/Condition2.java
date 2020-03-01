@@ -37,7 +37,14 @@ public class Condition2 {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
 
 	conditionLock.release();
-
+	
+	/*Borys Anichin*/
+	boolean interStatus = Machine.interrupt().disable();
+	waitQueue.add(KThread.currentThread());
+	KThread.sleep();
+	Machine.interrupt().restore(interStatus);
+	/*Borys Anichin*/
+	
 	conditionLock.acquire();
     }
 
@@ -47,6 +54,19 @@ public class Condition2 {
      */
     public void wake() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
+	
+	/*Borys Anichin*/
+	if (waitQueue.size() > 0)
+	{
+		boolean interStatus = Machine.interrupt().disable();
+		KThread thread = waitQueue.getFirst();
+		
+		if (thread != null)
+			thread.ready();
+		
+		Machine.interrupt().restore(interStatus);
+	}
+	/*Borys Anichin*/
     }
 
     /**
@@ -55,6 +75,14 @@ public class Condition2 {
      */
     public void wakeAll() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
+	
+	/*Borys Anichin*/
+	while(waitQueue.size() > 0)
+	{
+		wake();
+	}
+	/*Borys Anichin*/
+	
     }
 
     private Lock conditionLock;

@@ -276,6 +276,7 @@ public class KThread {
 	Lib.debug(dbgThread, "Joining to thread: " + toString());
 
 	Lib.assertTrue(this != currentThread);
+	
 	/*Borys Anichin*/
 	boolean intStatus = Machine.interrupt().disable();
 	ThreadQueue threadQueue = ThreadedKernel.scheduler.newThreadQueue(true);
@@ -287,6 +288,7 @@ public class KThread {
 	}
 	Machine.interrupt().restore(intStatus);
 	/*Borys Anichin*/
+	
     }
 
     /**
