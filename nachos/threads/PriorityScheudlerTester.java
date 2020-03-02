@@ -4,7 +4,7 @@ import nachos.machine.*;
 
 /* Mohammadkian Maroofi */
 
-/* following class is implemenetd in order to
+/* following class is Implemented in order to
  *  perform a selfTest call in ThreadedKernel.selfTest() 
  *  */
 public class PriorityScheudlerTester {
@@ -23,8 +23,8 @@ public class PriorityScheudlerTester {
 
 
 	/**
-	 * Following method will create several instances of KThread, and later on assings
-	 * different priorities to them, some cases by assiging an int (between 1 to 7 inclusively).
+	 * Following method will create several instances of KThread, and later on assigns
+	 * different priorities to them, some cases by assigning an integer (between 1 to 7 inclusively).
 	 */
 	public static void PriopritySchedulerTest1() {
 		System.out.print("PriopritySchedulerTest1\n");
@@ -66,6 +66,7 @@ public class PriorityScheudlerTester {
 		KThread.yield();
 	}
 
+	/* Three implemented Runnable classes to be used in second test case for PriorityScheduling */
 	private static class Runnable1 implements Runnable  {
 
 		Runnable1(Lock lock, boolean isOpen) {
@@ -76,11 +77,11 @@ public class PriorityScheudlerTester {
 		public void run() { 
 			lock.acquire();
 			while (this.isOpen == false) {
-				System.out.print("Low thread is blocked\n");
+				System.out.print("LOW thread BLOCKED\n");
 				KThread.currentThread().yield();
 			}
 			this.isOpen = false;
-			System.out.print("Low thread released\n");
+			System.out.print("LOW thread RELEASED\n");
 			lock.release();
 		}
 
@@ -99,12 +100,12 @@ public class PriorityScheudlerTester {
 
 			lock.acquire();
 			while (Runnable1.isOpen == true) {
-				System.out.print("High thread is blocked\n");
+				System.out.print("HIGH thread BLOCKED\n");
 				KThread.currentThread().yield();
 			}
 
 			Runnable1.isOpen = true;
-			System.out.print("High thread released\n");
+			System.out.print("HIGH thread RELEASED\n");
 			lock.release();
 		}
 
@@ -118,11 +119,11 @@ public class PriorityScheudlerTester {
 
 		public void run() { 
 			while(Runnable1.isOpen == false) {
-				System.out.print("Medium thread is blocked\n");
+				System.out.print("MEDIUM thread BLOCKED\n");
 				KThread.currentThread().yield();
 			}
 
-			System.out.print("Medium thread released\n");
+			System.out.print("MEDIUM thread RELEASED\n");
 			System.out.println("TEST OK");
 		}
 	}
