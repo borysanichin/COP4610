@@ -236,7 +236,14 @@ public class PriorityScheduler extends Scheduler {
 
 		public void print() {
 			Lib.assertTrue(Machine.interrupt().disabled());
-			// implement me (if you want)
+			/* Mohammadkian Maroofi */
+			for (Iterator<KThread> it = waitQueue.iterator(); it.hasNext();) {  
+                KThread currentThread = it.next(); 
+                int  priority = getThreadState(currentThread).getPriority();
+
+                System.out.print("Thread: " + currentThread 
+                                    + "\t  Priority: " + priority + "\n");
+            }
 		}
 
 		/**
