@@ -43,3 +43,7 @@
 /Runnable1.class
 /Runnable2.class
 /Runnable3.class
+/PriorityScheudlerTester$TestRunnable.class
+/PriorityScheudlerTester$highThreadRunnable.class
+/PriorityScheudlerTester$lowThreadRunnable.class
+/PriorityScheudlerTester$medThreadRunnable.class

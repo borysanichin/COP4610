@@ -22,10 +22,13 @@ public class PriorityScheudlerTester {
 	}
 
 
+	
+	
 	/**
 	 * Following method will create several instances of KThread, and later on assigns
 	 * different priorities to them, some cases by assigning an integer (between 1 to 7 inclusively).
 	 */
+	
 	public static void PriopritySchedulerTest1() {
 		System.out.print("PriopritySchedulerTest1\n");
 
@@ -39,6 +42,7 @@ public class PriorityScheudlerTester {
 				
 			}
 		}; 
+
 
 		KThread testThread;
 		testThread = new KThread(testRunnable);
@@ -67,9 +71,9 @@ public class PriorityScheudlerTester {
 	}
 
 	/* Three implemented Runnable classes to be used in second test case for PriorityScheduling */
-	private static class Runnable1 implements Runnable  {
+	private static class lowThreadRunnable implements Runnable  {
 
-		Runnable1(Lock lock, boolean isOpen) {
+		lowThreadRunnable(Lock lock, boolean isOpen) {
 			this.lock = lock;
 			this.isOpen = isOpen;
 		}
@@ -89,22 +93,22 @@ public class PriorityScheudlerTester {
 		static public boolean isOpen = false;
 	} 
 
-	private static class Runnable2 implements Runnable  {
+	private static class highThreadRunnable implements Runnable  {
 
-		Runnable2(Lock lock) {
+		highThreadRunnable(Lock lock) {
 			this.lock = lock;
 		}
 
 		public void run() { 
-			Runnable1.isOpen = true;
+			lowThreadRunnable.isOpen = true;
 
 			lock.acquire();
-			while (Runnable1.isOpen == true) {
+			while (lowThreadRunnable.isOpen == true) {
 				System.out.print("HIGH thread BLOCKED\n");
 				KThread.currentThread().yield();
 			}
 
-			Runnable1.isOpen = true;
+			lowThreadRunnable.isOpen = true;
 			System.out.print("HIGH thread RELEASED\n");
 			lock.release();
 		}
@@ -113,12 +117,12 @@ public class PriorityScheudlerTester {
 		static public boolean isOpen = false;
 	} 
 
-	private static class Runnable3 implements Runnable  {
-		Runnable3() {
+	private static class medThreadRunnable implements Runnable  {
+		medThreadRunnable() {
 		}
 
 		public void run() { 
-			while(Runnable1.isOpen == false) {
+			while(lowThreadRunnable.isOpen == false) {
 				System.out.print("MEDIUM thread BLOCKED\n");
 				KThread.currentThread().yield();
 			}
@@ -138,7 +142,7 @@ public class PriorityScheudlerTester {
 		Lock lock = new Lock();
 
 		// low priority thread closes the door
-		KThread low = new KThread(new Runnable1(lock, false));
+		KThread low = new KThread(new lowThreadRunnable(lock, false));
 		low.fork();
 		low.setName("low");
 		ThreadedKernel.scheduler.setPriority(low, 1);
@@ -147,13 +151,13 @@ public class PriorityScheudlerTester {
 		// High priority thread "high" waits for low priority thread "low" because they use the same lock.
 
 		// high priority thread opens the door
-		KThread high = new KThread(new Runnable2(lock));
+		KThread high = new KThread(new highThreadRunnable(lock));
 		high.fork();
 		high.setName("high");
 		ThreadedKernel.scheduler.setPriority(high, 7);
 
 		// medium priority thread waits for closing the door
-		KThread medium = new KThread(new Runnable3());
+		KThread medium = new KThread(new medThreadRunnable());
 		medium.fork();
 		medium.setName("medium");
 		ThreadedKernel.scheduler.setPriority(medium, 6);
