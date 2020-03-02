@@ -1,6 +1,7 @@
 package nachos.threads;
 
 import nachos.machine.*;
+import java.util.*;
 
 /**
  * Uses the hardware timer to provide preemption, and to allow threads to sleep
@@ -15,6 +16,9 @@ public class Alarm {
      * alarm.
      */
     public Alarm() {
+    	
+    priorityQueue = new PriorityQueue<>();
+    
 	Machine.timer().setInterruptHandler(new Runnable() {
 		public void run() { timerInterrupt(); }
 	    });
@@ -27,7 +31,27 @@ public class Alarm {
      * that should be run.
      */
     public void timerInterrupt() {
-	KThread.currentThread().yield();
+	
+    /*Borys Anichin*/
+	long nowTime = Machine.timer().getTime();
+	
+	if (priorityQueue.peek() == null)
+		return;
+				
+	if (nowTime < priorityQueue.peek().getWakeTime())
+	{
+		return;
+	}
+	else
+	{
+		while((priorityQueue.peek() != null) && nowTime >= priorityQueue.peek().getWakeTime())
+		{
+			ThreadObject to = priorityQueue.poll();
+			to.getThread().ready();
+		}
+	}
+	/*Borys Anichin*/
+	
     }
 
     /**
@@ -45,9 +69,18 @@ public class Alarm {
      * @see	nachos.machine.Timer#getTime()
      */
     public void waitUntil(long x) {
-	// for now, cheat just to get something working (busy waiting is bad)
+	
 	long wakeTime = Machine.timer().getTime() + x;
-	while (wakeTime > Machine.timer().getTime())
-	    KThread.yield();
+	KThread thread = KThread.currentThread();
+	
+	/*Borys Anichin*/
+	boolean interStatus = Machine.interrupt().disable();
+	priorityQueue.add(new ThreadObject(wakeTime, thread));
+	thread.sleep();
+	Machine.interrupt().restore(interStatus);
+	/*Borys Anichin*/
+	
     }
+    
+    private Queue<ThreadObject> priorityQueue;
 }
