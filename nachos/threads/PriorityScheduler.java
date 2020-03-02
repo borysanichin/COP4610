@@ -5,8 +5,6 @@ import nachos.machine.*;
 import java.util.TreeSet;
 import java.util.HashSet;
 import java.util.Iterator;
-
-/* Mohammadkian Maroofi */
 import java.util.LinkedList;
 
 /**
@@ -144,11 +142,11 @@ public class PriorityScheduler extends Scheduler {
 			// getThreadState(thread).acquire(this);
 			ThreadState state = getThreadState(thread); 
 
-			/* remove self from holder's resource list when transferring priority */
-			if (this.holder != null && this.transferPriority) {
-				this.holder.pqCollection.remove(this);
+			/* remove self from stateHolder's resource list when transferring priority */
+			if (this.stateHolder != null && this.transferPriority) {
+				this.stateHolder.pqCollection.remove(this);
 			}
-			this.holder = state;             
+			this.stateHolder = state;             
 
 			state.acquire(this);
 
@@ -160,10 +158,10 @@ public class PriorityScheduler extends Scheduler {
 			if (waitQueue.isEmpty()) {
 				return null;
 			}
-			/* remove self from holder's resource list when transferring priority */
-			if (this.holder != null && this.transferPriority)  
+			/* remove self from stateHolder's resource list when transferring priority */
+			if (this.stateHolder != null && this.transferPriority)  
 			{
-				this.holder.pqCollection.remove(this);
+				this.stateHolder.pqCollection.remove(this);
 			}
 
 			KThread firstThread = pickNextThread();
@@ -202,12 +200,12 @@ public class PriorityScheduler extends Scheduler {
 
 		/* Following Methods Added by Mohammadkian Maroofi */
 		public int getEffectivePriority() {
-			// if do not transfer priority, return minimum priority
+			
 			if (transferPriority == false) {
 				return priorityMinimum;
 			}
 
-			if (dirty) {
+			if (priorityTrigger) {
 				effectivePriority = priorityMinimum; 
 				for (Iterator<KThread> it = waitQueue.iterator(); it.hasNext();) {  
 					KThread thread = it.next(); 
@@ -216,21 +214,21 @@ public class PriorityScheduler extends Scheduler {
 						effectivePriority = priority;
 					}
 				}
-				dirty = false;
+				priorityTrigger = false;
 			}
 
 			return effectivePriority;
 		}
 
-		public void setDirty() {
+		public void setPriorityTrigger() {
 			if (transferPriority == false) {
 				return;
 			}
 
-			dirty = true;
+			priorityTrigger = true;
 
-			if (holder != null) {
-				holder.setDirty();
+			if (stateHolder != null) {
+				stateHolder.setPriorityTrigger();
 			}
 		}
 
@@ -255,15 +253,15 @@ public class PriorityScheduler extends Scheduler {
 		/** The queue  waiting on this resource */
 		private LinkedList<KThread> waitQueue = new LinkedList<KThread>();
 
-		/** The ThreadState corresponds to the holder of the resource */
-		private ThreadState holder = null;
+		/** The ThreadState corresponds to the stateHolder of the resource */
+		private ThreadState stateHolder = null;
 
 		/** Set to true when a new thread is added to the queue, 
-		 *  or any of the queues in the waitQueue flag themselves as dirty */
-		private boolean dirty;
+		 *  or any of the queues in the waitQueue flag themselves as priorityTrigger */
+		private boolean priorityTrigger;
 
 		/** The cached highest of the effective priorities in the waitQueue. 
-		 *  This value is invalidated while dirty is true */
+		 *  This value is invalidated while priorityTrigger is true */
 		private int effectivePriority; 
 
 	}
@@ -305,7 +303,7 @@ public class PriorityScheduler extends Scheduler {
 		/* Mohammdkian Maroofi */
 		public int getEffectivePriority() {
 			int maxEffective = this.priority;
-			if (dirty) {
+			if (priorityTrigger) {
 				for (Iterator<ThreadQueue> it = pqCollection.iterator(); it.hasNext();) {  
 					PriorityQueue pg = (PriorityQueue)(it.next()); 
 					int effective = pg.getEffectivePriority();
@@ -329,7 +327,7 @@ public class PriorityScheduler extends Scheduler {
 			this.priority = priority;
 
 			/* Mohammadkian Maroofi */
-			setDirty();
+			setPriorityTrigger();
 		}
 
 		/**
@@ -350,17 +348,17 @@ public class PriorityScheduler extends Scheduler {
 			Lib.assertTrue(waitQueue.waitQueue.indexOf(thread) == -1);
 
 			waitQueue.waitQueue.add(thread);
-			waitQueue.setDirty();
+			waitQueue.setPriorityTrigger();
 
 			// set waitingOn
 			waitOnQueue = waitQueue;
 
 			// if the waitQueue was previously in myResource, remove it 
-			// and set its holder to null
+			// and set its stateHolder to null
 			// When will this IF statement be executed?
 			if (pqCollection.indexOf(waitQueue) != -1) {
 				pqCollection.remove(waitQueue);
-				waitQueue.holder = null;
+				waitQueue.stateHolder = null;
 			}
 		}
 
@@ -385,24 +383,24 @@ public class PriorityScheduler extends Scheduler {
 				waitOnQueue = null;
 			}
 
-			// effective priority may be varied, set dirty flag
-			setDirty();
+			// effective priority may be varied, set priorityTrigger flag
+			setPriorityTrigger();
 		}	
 
 		/* Mohammadkian Maroofi */
-		/* Mutually recursive setDirty() 
+		/* Mutually recursive setPriorityTrigger() 
 		 * method with the one implemented in the PriorityQueue class
 		 */
-		public void setDirty() {
-			if (dirty) {
+		public void setPriorityTrigger() {
+			if (priorityTrigger) {
 				return;
 			}
 
-			dirty = true;
+			priorityTrigger = true;
 
 			PriorityQueue pg = (PriorityQueue) waitOnQueue;
 			if (pg != null) {
-				pg.setDirty();
+				pg.setPriorityTrigger();
 			}
 
 		}
@@ -423,7 +421,7 @@ public class PriorityScheduler extends Scheduler {
 		protected ThreadQueue waitOnQueue; 
 
 		/** Set to true when this thread's priority is changed, 
-		 * or when one of the queues in pqCollection flags itself as dirty */
-		private boolean dirty = false;  
+		 * or when one of the queues in pqCollection flags itself as priorityTrigger */
+		private boolean priorityTrigger = false;  
 	}
 }
