@@ -52,6 +52,7 @@ public class ThreadedKernel extends Kernel {
 	if (Machine.bank() != null) {
 	    ElevatorBank.selfTest();
 	}
+	/* Mohammadkian Maroofi */
 	PriorityScheudlerTester psTester = new PriorityScheudlerTester();
 	psTester.selfTest();
     }
