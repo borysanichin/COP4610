@@ -32,7 +32,7 @@ public class Alarm {
      */
     public void timerInterrupt() {
 	
-    /*Borys Anichin*/
+    /////////////////*Borys Anichin*//////////////////////////////////////////////////////////
 	long nowTime = Machine.timer().getTime();
 	
 	if (priorityQueue.peek() == null)
@@ -44,13 +44,13 @@ public class Alarm {
 	}
 	else
 	{
-		while((priorityQueue.peek() != null) && nowTime >= priorityQueue.peek().getWakeTime())
+		while( (priorityQueue.peek() != null) && (nowTime >= priorityQueue.peek().getWakeTime()) )
 		{
 			ThreadObject to = priorityQueue.poll();
 			to.getThread().ready();
 		}
 	}
-	/*Borys Anichin*/
+    /////////////////*Borys Anichin*//////////////////////////////////////////////////////////
 	
     }
 
@@ -73,14 +73,15 @@ public class Alarm {
 	long wakeTime = Machine.timer().getTime() + x;
 	KThread thread = KThread.currentThread();
 	
-	/*Borys Anichin*/
+	///////////////////*Borys Anichin*////////////////////
 	boolean interStatus = Machine.interrupt().disable();
 	priorityQueue.add(new ThreadObject(wakeTime, thread));
 	thread.sleep();
 	Machine.interrupt().restore(interStatus);
-	/*Borys Anichin*/
+    ///////////////////*Borys Anichin*////////////////////
 	
     }
     
     private Queue<ThreadObject> priorityQueue;
+    
 }
