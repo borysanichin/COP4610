@@ -89,6 +89,60 @@ public class Condition2 {
 	//////*Borys Anichin*//////
 	
     }
+    private static class Condition2Test implements Runnable {
+    	Condition2Test(Lock lock, Condition2 condition) {
+    	    this.condition = condition;
+            this.lock = lock;
+    	}
+    	
+    	public void run() {
+            lock.acquire();
+
+            System.out.print(KThread.currentThread().getName() + " acquired lock\n");	
+            condition.sleep();
+            System.out.print(KThread.currentThread().getName() + " acquired lock again\n");	
+
+            lock.release();
+            System.out.print(KThread.currentThread().getName() + " released lock \n");	
+    	}
+
+        private Lock lock; 
+        private Condition2 condition; 
+        }
+
+        /**
+         * Test if this module is working.
+         */
+        public static void selfTest() {
+
+        System.out.print("Enter Condition2.selfTest\n");	
+
+        Lock lock = new Lock();
+        Condition2 condition = new Condition2(lock); 
+
+        KThread t[] = new KThread[10];
+    	for (int i=0; i<10; i++) {
+             t[i] = new KThread(new Condition2Test(lock, condition));
+             t[i].setName("Thread" + i).fork();
+    	}
+
+        KThread.yield();
+        
+        lock.acquire();
+
+        System.out.print("condition.wake();\n");	
+        condition.wake();
+
+        System.out.print("condition.wakeAll();\n");	
+        condition.wakeAll();
+
+        lock.release();
+
+        System.out.print("Leave Condition2.selfTest\n");	
+
+        t[9].join();
+            
+        }
 
     private Lock conditionLock;
     

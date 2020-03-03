@@ -55,6 +55,11 @@ public class ThreadedKernel extends Kernel {
 	/* Mohammadkian Maroofi */
 	PriorityScheudlerTester psTester = new PriorityScheudlerTester();
 	psTester.selfTest();
+	System.out.println("Alarm test");
+	//KThread.joinTest();
+	//Alarm.selfTest();
+	Condition2.selfTest();
+	//delete - > KThread.selfTest2();
     }
     
     /**
