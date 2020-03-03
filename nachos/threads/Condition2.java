@@ -24,7 +24,11 @@ public class Condition2 {
      */
     public Condition2(Lock conditionLock) {
 	this.conditionLock = conditionLock;
+	
+    /////*Borys Anichin*/////////////////
 	waitQueue = new LinkedList<KThread>();
+    /////*Borys Anichin*/////////////////
+	
     }
 
     /**
@@ -38,12 +42,12 @@ public class Condition2 {
 
 	conditionLock.release();
 	
-	/*Borys Anichin*/
+	/////////*Borys Anichin*//////////////////////////
 	boolean interStatus = Machine.interrupt().disable();
 	waitQueue.add(KThread.currentThread());
 	KThread.sleep();
 	Machine.interrupt().restore(interStatus);
-	/*Borys Anichin*/
+	/////////*Borys Anichin*//////////////////////////
 	
 	conditionLock.acquire();
     }
@@ -55,18 +59,19 @@ public class Condition2 {
     public void wake() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
 	
-	/*Borys Anichin*/
+	///////////////*Borys Anichin*/////////////////////////
 	if (waitQueue.size() > 0)
 	{
 		boolean interStatus = Machine.interrupt().disable();
-		KThread thread = waitQueue.getFirst();
+		KThread thread = waitQueue.pollFirst();
 		
 		if (thread != null)
 			thread.ready();
 		
 		Machine.interrupt().restore(interStatus);
 	}
-	/*Borys Anichin*/
+	////////////////*Borys Anichin*////////////////////////
+	
     }
 
     /**
@@ -76,15 +81,18 @@ public class Condition2 {
     public void wakeAll() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
 	
-	/*Borys Anichin*/
+	//////*Borys Anichin*/////
 	while(waitQueue.size() > 0)
 	{
 		wake();
 	}
-	/*Borys Anichin*/
+	//////*Borys Anichin*//////
 	
     }
 
     private Lock conditionLock;
+    
+    /////*Borys Anichin*/////////////////
     private LinkedList<KThread> waitQueue;
+    /////*Borys Anichin*/////////////////
 }

@@ -277,17 +277,20 @@ public class KThread {
 
 	Lib.assertTrue(this != currentThread);
 	
-	/*Borys Anichin*/
+	///////////*Borys Anichin*//////////////////////////////////////////////////
 	boolean intStatus = Machine.interrupt().disable();
-	ThreadQueue threadQueue = ThreadedKernel.scheduler.newThreadQueue(true);
-	threadQueue.acquire(this);
-	threadQueue.waitForAccess(this);
-	while(this.status != statusFinished) 
+	if (this.status != statusFinished)
 	{
-		yield();
+		ThreadQueue threadQueue = ThreadedKernel.scheduler.newThreadQueue(true);
+		threadQueue.acquire(this);
+		threadQueue.waitForAccess(currentThread);
+		while(this.status != statusFinished) 
+		{
+			yield();
+		}
 	}
 	Machine.interrupt().restore(intStatus);
-	/*Borys Anichin*/
+    ///////////*Borys Anichin*//////////////////////////////////////////////////
 	
     }
 
