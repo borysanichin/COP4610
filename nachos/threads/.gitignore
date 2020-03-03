@@ -25,3 +25,9 @@
 /SynchList.class
 /ThreadQueue.class
 /ThreadedKernel.class
+/PriorityScheudlerTester$1.class
+/PriorityScheudlerTester$highThreadRunnable.class
+/PriorityScheudlerTester$lowThreadRunnable.class
+/PriorityScheudlerTester$medThreadRunnable.class
+/PriorityScheudlerTester.class
+/ThreadObject.class
