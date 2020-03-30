@@ -35,10 +35,10 @@ public class UserKernel extends ThreadedKernel {
     public void selfTest() {
 	super.selfTest();
 
-	System.out.println("Testing the console device. Typed characters");
-	System.out.println("will be echoed until q is typed.");
+	//System.out.println("Testing the console device. Typed characters");
+	//System.out.println("will be echoed until q is typed.");
 
-	char c;
+	/*char c;
 
 	do {
 	    c = (char) console.readByte(true);
@@ -46,7 +46,11 @@ public class UserKernel extends ThreadedKernel {
 	}
 	while (c != 'q');
 
-	System.out.println("");
+	System.out.println("");*/
+	//UserProcess userProcess = new UserProcess();
+	//userProcess.handleSyscall(4, 0, 2, 2, 2);
+	//userProcess.handleSyscall(5, 0, 2, 2, 2);
+	
     }
 
     /**

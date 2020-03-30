@@ -10,14 +10,14 @@ import nachos.machine.*;
 public class PriorityScheudlerTester {
 
 	public static void selfTest() {
-		TestPrioprityScheduler();
+		//TestPrioprityScheduler();
 	}
 
 
 	public static void TestPrioprityScheduler() {
 		Lib.debug(dbgFlag, "Entering PSTest");
-		PriopritySchedulerTest1();
-		PriopritySchedulerTest2();
+		//PriopritySchedulerTest1();
+		//PriopritySchedulerTest2();
 		Lib.debug(dbgFlag, "Leaving PSTest");
 	}
 
@@ -29,7 +29,7 @@ public class PriorityScheudlerTester {
 	 * different priorities to them, some cases by assigning an integer (between 1 to 7 inclusively).
 	 */
 	
-	public static void PriopritySchedulerTest1() {
+	/*public static void PriopritySchedulerTest1() {
 		System.out.print("PriopritySchedulerTest1\n");
 
 		Runnable testRunnable = new Runnable() {
@@ -49,13 +49,13 @@ public class PriorityScheudlerTester {
 		testThread.setName("TestThread1");
 		testThread.fork();
 		// Assigning priority
-		ThreadedKernel.scheduler.setPriority(testThread, (int) 2);
+		//ThreadedKernel.scheduler.setPriority(testThread, (int) 2);
 
 		KThread testThread2;
 		testThread2 = new KThread(testRunnable);
 		testThread2.setName("TestThread2");
 		// Assigning priority
-		ThreadedKernel.scheduler.setPriority(testThread2, (int) 3);
+		//ThreadedKernel.scheduler.setPriority(testThread2, (int) 3);
 		testThread2.fork();
 
 		testThread.join();
@@ -65,10 +65,10 @@ public class PriorityScheudlerTester {
 			t[i] = new KThread(testRunnable);
 			t[i].setName("Thread" + i).fork();
 			// Assigning priority
-			ThreadedKernel.scheduler.setPriority(t[i], (int)((i+1)%8));
+			//ThreadedKernel.scheduler.setPriority(t[i], (int)((i+1)%8));
 		}
 		KThread.yield();
-	}
+	}*/
 
 	/* Three implemented Runnable classes to be used in second test case for PriorityScheduling */
 	private static class lowThreadRunnable implements Runnable  {

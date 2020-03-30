@@ -24,12 +24,18 @@ public class ThreadedKernel extends Kernel {
 
 	// set fileSystem
 	String fileSystemName = Config.getString("ThreadedKernel.fileSystem");
-	if (fileSystemName != null)
+	if (fileSystemName != null) {
 	    fileSystem = (FileSystem) Lib.constructObject(fileSystemName);
-	else if (Machine.stubFileSystem() != null)
+	    System.out.println("File System = (FileSystem) Lib.constructObject(fileSystemName)");
+	}
+	else if (Machine.stubFileSystem() != null) {
 	    fileSystem = Machine.stubFileSystem();
-	else
+	    System.out.println("File System = Machine.stubFileSystem()");
+	}
+	else {
 	    fileSystem = null;
+	    System.out.println("File System is null");
+	}
 
 	// start threading
 	new KThread(null);
@@ -46,19 +52,19 @@ public class ThreadedKernel extends Kernel {
      * tests here.
      */	
     public void selfTest() {
-	KThread.selfTest();
-	Semaphore.selfTest();
+	//KThread.selfTest();
+	//Semaphore.selfTest();
 	SynchList.selfTest();
 	if (Machine.bank() != null) {
 	    ElevatorBank.selfTest();
 	}
 	/* Mohammadkian Maroofi */
-	PriorityScheudlerTester psTester = new PriorityScheudlerTester();
-	psTester.selfTest();
-	System.out.println("Alarm test");
+	//PriorityScheudlerTester psTester = new PriorityScheudlerTester();
+	//psTester.selfTest();
+	//System.out.println("Alarm test");
 	//KThread.joinTest();
 	//Alarm.selfTest();
-	Condition2.selfTest();
+	//Condition2.selfTest();
 	//delete - > KThread.selfTest2();
     }
     
