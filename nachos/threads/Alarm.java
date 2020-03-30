@@ -81,6 +81,51 @@ public class Alarm {
     ///////////////////*Borys Anichin*////////////////////
 	
     }
+    //delete
+    public static void selfTest() {
+
+        System.out.print("Enter Alarm.selfTest\n");	
+
+    	Runnable r = new Runnable() {
+    	    public void run() {
+                    KThread t[] = new KThread[10];
+
+                    for (int i=0; i<10; i++) {
+                         t[i] = new KThread(new AlarmTest(160 + i*20));
+                         t[i].setName("Thread" + i).fork();
+                    }
+                    for (int i=0; i<10000; i++) {
+                        KThread.yield();
+                    }
+                }
+        };
+
+        KThread t = new KThread(r);
+        t.setName("Alarm SelfTest");
+        t.fork();
+        KThread.yield();
+
+        t.join();
+
+        System.out.print("Leave Alarm.selfTest\n");	
+
+        }
+    private static class AlarmTest implements Runnable {
+    	AlarmTest(long x) {
+    	    this.time = x;
+    	}
+    	
+    	public void run() {
+
+            System.out.print(KThread.currentThread().getName() + " alarm\n");	
+            ThreadedKernel.alarm.waitUntil(time);
+            System.out.print(KThread.currentThread().getName() + " woken up \n");	
+
+    	}
+
+        private long  time; 
+        }
+    //delete
     
     private Queue<ThreadObject> priorityQueue;
     

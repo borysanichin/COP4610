@@ -23,10 +23,19 @@ public class UserProcess {
      * Allocate a new process.
      */
     public UserProcess() {
+    	
 	int numPhysPages = Machine.processor().getNumPhysPages();
 	pageTable = new TranslationEntry[numPhysPages];
 	for (int i=0; i<numPhysPages; i++)
 	    pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
+	
+	//Borys Ancihin//
+	initializeListOfFileDescriptors();
+	
+	fileDescriptors[fdStandardInput].file = UserKernel.console.openForReading();
+	fileDescriptors[fdStandardOutput].file = UserKernel.console.openForWriting();
+	//Borys Anichin//
+	
     }
     
     /**
@@ -92,10 +101,12 @@ public class UserProcess {
 	byte[] bytes = new byte[maxLength+1];
 
 	int bytesRead = readVirtualMemory(vaddr, bytes);
+	System.out.println("Number of bytes: " + bytesRead);
 
-	for (int length=0; length<bytesRead; length++) {
-	    if (bytes[length] == 0)
-		return new String(bytes, 0, length);
+	for (int length = 0; length < bytesRead; length++) {
+	    if (bytes[length] == 0) {
+	    	return new String(bytes, 0, length);
+	    }
 	}
 
 	return null;
@@ -339,16 +350,158 @@ public class UserProcess {
      * Handle the halt() system call. 
      */
     private int handleHalt() {
-
+    System.out.println("in handleHalt()");
 	Machine.halt();
 	
 	Lib.assertNotReached("Machine.halt() did not halt machine!");
 	return 0;
     }
+    
+    //*Borys Anichin*//
+    private int handleCreate(int address) {
+    	System.out.println("in handleCreatet()");                    
+        String fileName = readVirtualMemoryString(address, maxStringLength);
 
+        OpenFile file  = ThreadedKernel.fileSystem.open("new", true);
+
+        if (file == null) {
+            return -1;
+        }
+        
+        int fileDescriptorId = getFileDescriptor();
+        if (fileDescriptorId < 0) {
+                return -1;
+        }
+        
+        fileDescriptors[fileDescriptorId].fileName = fileName;
+        fileDescriptors[fileDescriptorId].file = file;
+
+        System.out.println("File Created");        
+        return fileDescriptorId;
+    }
+    //*Borys Anichin*//
+    
+    //*Borys Anichin*//
+    private int handleOpen(int address) {
+    	
+    	System.out.println("in handleOpen()");
+
+        String fileName = readVirtualMemoryString(address, maxStringLength);
+
+        OpenFile file  = ThreadedKernel.fileSystem.open("fileName", false);
+
+        if (file == null) {
+            return -1;
+        }
+        
+        int fileDescriptorId = getFileDescriptor();
+        
+        if (fileDescriptorId < 0) {
+                return -1;
+        }
+        
+        fileDescriptors[fileDescriptorId].fileName = fileName;
+        fileDescriptors[fileDescriptorId].file = file;
+
+        System.out.println("File Opened.");
+        return fileDescriptorId;
+    }
+    //*Borys Anichin*//
+    
+    //*Borys Anichin*//
+    private int handleRead(int fileDescriptorId, int address, int numberOfBytesRequested) {
+	    
+        if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
+                || fileDescriptors[fileDescriptorId].file == null){
+            return -1;
+        }
+
+        FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
+        byte[] buffer = new byte[numberOfBytesRequested];
+
+        int numberOfBytesRead = fileDescriptor.file.read(buffer, 0, numberOfBytesRequested);
+
+        if (numberOfBytesRead < 0) {
+            return -1;
+        }
+        
+        int numberOfBytesWritten = writeVirtualMemory(address, buffer, 0, numberOfBytesRead);
+        
+        if (numberOfBytesWritten < 0) {
+            return -1;
+        }
+        
+        return numberOfBytesRead;
+    }
+    //Borys Anichin*//
+    
+    //Borys Anichin*//
+    private int handleWrite(int fileDescriptorId, int address, int bufferSize) {
+    	
+        if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
+                || fileDescriptors[fileDescriptorId].file == null) {
+            return -1;
+        }
+
+        FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
+
+        byte[] buffer = new byte[bufferSize];
+
+        int numberOfBytesRead = readVirtualMemory(address, buffer);
+
+
+        int numberOfBytesWritten = fileDescriptor.file.write(buffer, 0, numberOfBytesRead);
+
+        if (numberOfBytesWritten < 0) {
+            return -1;
+        }
+
+        return numberOfBytesWritten;
+    }
+    //*Borys Anichin*//
+    
+    //*Borys Anichin*//
+    private int handleClose(int fileDescriptorId) {
+
+        if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles) {
+            return -1;
+        }
+
+        FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
+
+        fileDescriptor.file.close();
+        fileDescriptor.file = null;
+        fileDescriptor.fileName = "";
+
+        return 0;
+    }
+    //*Borys Anichin*//
+    
+    //Borys Anichin*//
+    private int handleUnlink(int address) {
+
+        String fileName = readVirtualMemoryString(address, maxStringLength);
+        
+        if (fileName == null) {
+        	return -1;
+        }
+
+        int fileDescriptorId = findFileDescriptor(fileName);
+        
+        if (fileDescriptorId >= 0) {
+        	handleClose(fileDescriptorId);
+        }
+
+		if (UserKernel.fileSystem.remove(fileName)) {
+			return 0;
+		}
+        
+        return -1; 
+    }
+    //*Borys Anichin*//
 
     private static final int
-        syscallHalt = 0,
+    syscallHalt = 0,
 	syscallExit = 1,
 	syscallExec = 2,
 	syscallJoin = 3,
@@ -391,8 +544,18 @@ public class UserProcess {
 	switch (syscall) {
 	case syscallHalt:
 	    return handleHalt();
-
-
+	case syscallCreate:
+		return handleCreate(a0);
+	case syscallOpen:
+		return handleOpen(a0);
+	case syscallRead:
+		return handleRead(a0, a1, a2);
+	case syscallWrite:
+		return handleWrite(a0, a1, a2);
+	case syscallClose:
+		return handleClose(a0);
+	case syscallUnlink:
+		return handleUnlink(a0);
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
 	    Lib.assertNotReached("Unknown system call!");
@@ -429,6 +592,34 @@ public class UserProcess {
 	    Lib.assertNotReached("Unexpected exception");
 	}
     }
+    
+    private void initializeListOfFileDescriptors() {
+    	
+    	fileDescriptors = new FileDescriptor[maxOpenedFiles];
+    	
+    	for (int i=0; i< maxOpenedFiles; i++) {
+            fileDescriptors[i] = new FileDescriptor();
+    	}
+    }
+    
+    private int getFileDescriptor() {
+        for (int i = 0; i < maxOpenedFiles; i++) {
+            if (fileDescriptors[i].file == null) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+    
+    private int findFileDescriptor(String name) {
+        for (int i = 0; i < maxOpenedFiles; i++) {
+            if (fileDescriptors[i].fileName == name)
+                return i;
+        }
+
+        return -1;
+    }
 
     /** The program being run by this process. */
     protected Coff coff;
@@ -443,7 +634,16 @@ public class UserProcess {
     
     private int initialPC, initialSP;
     private int argc, argv;
+    
+    private FileDescriptor fileDescriptors[];
 	
     private static final int pageSize = Processor.pageSize;
     private static final char dbgProcess = 'a';
+    
+    //*Borys Anichin*//
+    public static final int maxStringLength = 256;
+    public static final int maxOpenedFiles = 16;
+    public static final int fdStandardInput = 0;
+    public static final int fdStandardOutput = 1;
+    //*Borys Anichin*//
 }

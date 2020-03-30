@@ -421,6 +421,158 @@ public class KThread {
 	new KThread(new PingTest(1)).setName("forked thread").fork();
 	new PingTest(0).run();
     }
+    ///test1-delete///
+    public static void selfTest2() {
+    	Lib.debug(dbgThread, "Enter KThread.selfTest2");
+    	
+
+        /*
+        Runnable myrunnable1 = new Runnable() {
+           public void run() { yield(); } 
+        };
+        */
+
+        Runnable myrunnable1 = new Runnable() {
+
+            public void run() { 
+                int i = 0;
+                while(i < 10) { 
+                    System.out.println("*** in while1 loop " + i + " ***");
+                    i++;
+                } /*yield();*/ 
+            }
+        };
+
+        testThread = new KThread(myrunnable1);
+        testThread.setName("child 1");
+
+
+        // t1.join();
+
+        Runnable myrunnable2 = new Runnable() {
+            public void run() { 
+                System.out.println("selfTest2::Runnable");
+                testThread.join();
+                int i = 0;
+                while(i < 10) { 
+                    System.out.println("*** in while2 loop " + i + " ***");
+                    i++;
+                } /*yield();*/ 
+            }
+        };
+
+        KThread t2 = new KThread(myrunnable2);
+        t2.setName("child 2");
+
+        System.out.println("*** t2.fork ***");
+        t2.fork();
+
+        System.out.println("*** t1.fork ***");
+        testThread.fork();
+
+
+        System.out.println("*** [hy] enter join ***");
+        t2.join();
+        System.out.println("*** [hy] leave join ***");
+        // t2.join();
+
+        // Add current thread to ready queue, and switch context
+        yield();
+
+        }
+    private static void test1(){
+		Joinee joinee = new Joinee();
+		KThread joineeThread = new KThread(joinee).setName("Joinee");
+		KThread joiner = new KThread(new Joiner(joineeThread)).setName("Joiner");
+		System.out.println("\n--Case1: x joins y and x runs first--");
+		joiner.fork();
+		joineeThread.fork();
+	}
+
+
+	/* Case 2: x joins y; y runs first */
+
+	private static void test2(){
+		KThread joinee = new KThread(new Joinee()).setName("Joinee");
+		KThread joiner = new KThread(new Joiner(joinee)).setName("Joiner");
+		System.out.println("\n--Case2: x joins y and y runs first--");
+		joinee.fork();
+		joiner.fork();
+	}
+
+	/*Case3: x and y join on z; z must finish first then either x or y finishes */
+
+	private static void test3(){
+		KThread joineeZ = new KThread(new Joinee()).setName("JoineeZ");
+		KThread joinerY = new KThread(new Joiner(joineeZ)).setName("JoinerY");
+		KThread joinerX = new KThread(new Joiner(joineeZ)).setName("JoinerX");
+		System.out.println("\n--Case3: x and y join on z; z must finishs first then either x or y finishes--");
+		joinerX.fork();
+		joineeZ.fork();
+		joinerY.fork();
+		ThreadedKernel.alarm.waitUntil(100000);
+	}
+
+		/*Case4: super joiner x joins y and z; y and z must finish before x */ 
+
+	private static void test4(){
+		KThread joineeZ = new KThread(new Joinee()).setName("JoineeZ");
+		KThread joineeY = new KThread(new Joinee()).setName("JoineeY");
+		KThread joinerX = new KThread(new SuperJoiner(joineeY, joineeZ)).setName("JoinerX");
+		System.out.println("\n--Case4: super joiner x joins y and z; y and z must finish before x--");
+		joineeZ.fork();
+		joinerX.fork();
+		joineeY.fork();
+	}
+	private static class Joiner implements Runnable {
+		private KThread joinee;
+
+		Joiner(KThread joiNee){
+			joinee = joiNee;
+		}
+
+		public void run(){
+			System.out.println("Joiner: before joining " + joinee.getName());
+			joinee.join();
+			System.out.println("Joiner: after joining " + joinee.getName());
+		}
+	}
+
+	private static class Joinee implements Runnable {
+		public void run(){
+			System.out.println("Joinee: Happy running");
+		}
+	}
+
+	private static class SuperJoiner implements Runnable {
+		private KThread joinee1, joinee2;
+
+		SuperJoiner(KThread joiNee1, KThread joiNee2){
+			joinee1 = joiNee1;
+			joinee2 = joiNee2;
+		}
+
+		public void run(){
+			System.out.println("Joiner: before joining" + joinee1.getName());
+			joinee1.join();
+			System.out.println("Joiner: after joining" + joinee1.getName());
+			System.out.println("Joiner: before joining" + joinee2.getName());
+			joinee2.join();
+			System.out.println("Joiner: after joining" + joinee2.getName());
+		}
+	}
+	
+    public static void joinTest(){
+    	test1();
+    	System.out.println("test 1 ended");
+    	test2();
+    	System.out.println("test 2 ended");
+    	test3();
+    	System.out.println("test 3 ended");
+    	test4();
+    	System.out.println("test 4 ended");
+    }
+    ///tests-delete///
 
     private static final char dbgThread = 't';
 
@@ -459,4 +611,5 @@ public class KThread {
     private static KThread currentThread = null;
     private static KThread toBeDestroyed = null;
     private static KThread idleThread = null;
+    private static KThread testThread = null; //< - delete test1
 }
