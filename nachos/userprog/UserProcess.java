@@ -19,6 +19,7 @@ import java.io.EOFException;
  * @see	nachos.network.NetProcess
  */
 public class UserProcess {
+<<<<<<< HEAD
 	/**
 	 * Allocate a new process.
 	 */
@@ -36,6 +37,97 @@ public class UserProcess {
 		fileDescriptors[fdStandardOutput].file = UserKernel.console.openForWriting();
 		//Borys Anichin//
 
+=======
+    /**
+     * Allocate a new process.
+     */
+    public UserProcess() {
+    	
+	int numPhysPages = Machine.processor().getNumPhysPages();
+	pageTable = new TranslationEntry[numPhysPages];
+	for (int i=0; i<numPhysPages; i++)
+	    pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
+	
+	//Borys Ancihin//
+	initializeListOfFileDescriptors();
+	
+	fileDescriptors[fdStandardInput].file = UserKernel.console.openForReading();
+	fileDescriptors[fdStandardOutput].file = UserKernel.console.openForWriting();
+	//Borys Anichin//
+	
+    }
+    
+    /**
+     * Allocate and return a new process of the correct class. The class name
+     * is specified by the <tt>nachos.conf</tt> key
+     * <tt>Kernel.processClassName</tt>.
+     *
+     * @return	a new process of the correct class.
+     */
+    public static UserProcess newUserProcess() {
+	return (UserProcess)Lib.constructObject(Machine.getProcessClassName());
+    }
+
+    /**
+     * Execute the specified program with the specified arguments. Attempts to
+     * load the program, and then forks a thread to run it.
+     *
+     * @param	name	the name of the file containing the executable.
+     * @param	args	the arguments to pass to the executable.
+     * @return	<tt>true</tt> if the program was successfully executed.
+     */
+    public boolean execute(String name, String[] args) {
+	if (!load(name, args))
+	    return false;
+	
+	new UThread(this).setName(name).fork();
+
+	return true;
+    }
+
+    /**
+     * Save the state of this process in preparation for a context switch.
+     * Called by <tt>UThread.saveState()</tt>.
+     */
+    public void saveState() {
+    }
+
+    /**
+     * Restore the state of this process after a context switch. Called by
+     * <tt>UThread.restoreState()</tt>.
+     */
+    public void restoreState() {
+	Machine.processor().setPageTable(pageTable);
+    }
+
+    /**
+     * Read a null-terminated string from this process's virtual memory. Read
+     * at most <tt>maxLength + 1</tt> bytes from the specified address, search
+     * for the null terminator, and convert it to a <tt>java.lang.String</tt>,
+     * without including the null terminator. If no null terminator is found,
+     * returns <tt>null</tt>.
+     *
+     * @param	vaddr	the starting virtual address of the null-terminated
+     *			string.
+     * @param	maxLength	the maximum number of characters in the string,
+     *				not including the null terminator.
+     * @return	the string read, or <tt>null</tt> if no null terminator was
+     *		found.
+     */
+    public String readVirtualMemoryString(int vaddr, int maxLength) {
+	Lib.assertTrue(maxLength >= 0);
+
+	byte[] bytes = new byte[maxLength+1];
+
+	int bytesRead = readVirtualMemory(vaddr, bytes);
+	System.out.println("Number of bytes: " + bytesRead);
+
+	for (int length = 0; length < bytesRead; length++) {
+	    if (bytes[length] == 0) {
+	    	System.out.println("bytes[length] == 0");
+	    	return new String(bytes, 0, length);
+	    }
+>>>>>>> 75a82549501636e371d3ebcf1a7639ae806d327a
 	}
 
 	/**
@@ -408,6 +500,7 @@ public class UserProcess {
 		processor.writeRegister(Processor.regA0, argc);
 		processor.writeRegister(Processor.regA1, argv);
 	}
+<<<<<<< HEAD
 
 	/**
 	 * Handle the halt() system call. 
@@ -554,6 +647,188 @@ public class UserProcess {
 		if (fileDescriptorId >= 0) {
 			handleClose(fileDescriptorId);
 		}
+=======
+	
+	return true;
+    }
+
+    /**
+     * Release any resources allocated by <tt>loadSections()</tt>.
+     */
+    protected void unloadSections() {
+    }    
+
+    /**
+     * Initialize the processor's registers in preparation for running the
+     * program loaded into this process. Set the PC register to point at the
+     * start function, set the stack pointer register to point at the top of
+     * the stack, set the A0 and A1 registers to argc and argv, respectively,
+     * and initialize all other registers to 0.
+     */
+    public void initRegisters() {
+	Processor processor = Machine.processor();
+
+	// by default, everything's 0
+	for (int i=0; i<processor.numUserRegisters; i++)
+	    processor.writeRegister(i, 0);
+
+	// initialize PC and SP according
+	processor.writeRegister(Processor.regPC, initialPC);
+	processor.writeRegister(Processor.regSP, initialSP);
+
+	// initialize the first two argument registers to argc and argv
+	processor.writeRegister(Processor.regA0, argc);
+	processor.writeRegister(Processor.regA1, argv);
+    }
+
+    /**
+     * Handle the halt() system call. 
+     */
+    private int handleHalt() {
+    System.out.println("in handleHalt()");
+	Machine.halt();
+	
+	Lib.assertNotReached("Machine.halt() did not halt machine!");
+	return 0;
+    }
+    
+    //*Borys Anichin*//
+    private int handleCreate(int address) {
+    	System.out.println("in handleCreate()");                    
+        String fileName = readVirtualMemoryString(address, maxStringLength);
+        System.out.println("File name is " + fileName); 
+
+        OpenFile file  = ThreadedKernel.fileSystem.open(fileName, true);
+
+        if (file == null) {
+        	System.out.println("File is null"); 
+            return -1;
+        }
+        
+        int fileDescriptorId = getFileDescriptor();
+        if (fileDescriptorId < 0) {
+                return -1;
+        }
+        
+        fileDescriptors[fileDescriptorId].fileName = fileName;
+        fileDescriptors[fileDescriptorId].file = file;
+
+        System.out.println("File Created");        
+        return fileDescriptorId;
+    }
+    //*Borys Anichin*//
+    
+    //*Borys Anichin*//
+    private int handleOpen(int address) {
+    	
+    	System.out.println("in handleOpen()");
+
+        String fileName = readVirtualMemoryString(address, maxStringLength);
+
+        OpenFile file  = ThreadedKernel.fileSystem.open("fileName", false);
+
+        if (file == null) {
+        	System.out.println("File is null"); 
+            return -1;
+        }
+        
+        int fileDescriptorId = getFileDescriptor();
+        
+        if (fileDescriptorId < 0) {
+                return -1;
+        }
+        
+        fileDescriptors[fileDescriptorId].fileName = fileName;
+        fileDescriptors[fileDescriptorId].file = file;
+
+        System.out.println("File Opened.");
+        return fileDescriptorId;
+    }
+    //*Borys Anichin*//
+    
+    //*Borys Anichin*//
+    private int handleRead(int fileDescriptorId, int address, int numberOfBytesRequested) {
+	    
+        if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
+                || fileDescriptors[fileDescriptorId].file == null || numberOfBytesRequested < 0){
+            return -1;
+        }
+
+        FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
+        byte[] buffer = new byte[numberOfBytesRequested];
+
+        int numberOfBytesRead = fileDescriptor.file.read(buffer, 0, numberOfBytesRequested);
+
+        if (numberOfBytesRead < 0) {
+            return -1;
+        }
+        
+        int numberOfBytesWritten = writeVirtualMemory(address, buffer, 0, numberOfBytesRead);
+        
+        if (numberOfBytesWritten < 0) {
+            return -1;
+        }
+        
+        return numberOfBytesRead;
+    }
+    //Borys Anichin*//
+    
+    //Borys Anichin*//
+    private int handleWrite(int fileDescriptorId, int address, int bufferSize) {
+    	
+        if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
+                || fileDescriptors[fileDescriptorId].file == null || bufferSize < 0) {
+            return -1;
+        }
+
+        FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
+
+        byte[] buffer = new byte[bufferSize];
+
+        int numberOfBytesRead = readVirtualMemory(address, buffer);
+
+        int numberOfBytesWritten = fileDescriptor.file.write(buffer, 0, numberOfBytesRead);
+
+        if (numberOfBytesWritten < 0) {
+            return -1;
+        }
+
+        return numberOfBytesWritten;
+    }
+    //*Borys Anichin*//
+    
+    //*Borys Anichin*//
+    private int handleClose(int fileDescriptorId) {
+
+        if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles) {
+            return -1;
+        }
+
+        FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
+
+        fileDescriptor.file.close();
+        fileDescriptor.file = null;
+        fileDescriptor.fileName = "";
+
+        return 0;
+    }
+    //*Borys Anichin*//
+    
+    //Borys Anichin*//
+    private int handleUnlink(int address) {
+
+        String fileName = readVirtualMemoryString(address, maxStringLength);
+        
+        if (fileName == null) {
+        	return -1;
+        }
+
+        int fileDescriptorId = findFileDescriptor(fileName);
+        
+        if (fileDescriptorId >= 0) {
+        	handleClose(fileDescriptorId);
+        }
+>>>>>>> 75a82549501636e371d3ebcf1a7639ae806d327a
 
 		if (UserKernel.fileSystem.remove(fileName)) {
 			return 0;
