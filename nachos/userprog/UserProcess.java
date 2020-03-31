@@ -346,8 +346,8 @@ public class UserProcess {
 	processor.writeRegister(Processor.regA0, argc);
 	processor.writeRegister(Processor.regA1, argv);
     }
-    
-	/*Saif Khan
+	
+    /*Saif Khan
 	implementation of exit:
 	*/
     private void handleExit(int exitStatus)
@@ -494,7 +494,7 @@ public class UserProcess {
         else                                                               
            return 0;                                                       
     }    
-
+	
 
     /**
      * Handle the halt() system call. 
