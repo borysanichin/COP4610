@@ -410,6 +410,155 @@ for (int i = 0; i < numPages; i++) {
 	processor.writeRegister(Processor.regA0, argc);
 	processor.writeRegister(Processor.regA1, argv);
     }
+    
+	/*Saif Khan
+	implementation of exit:
+	*/
+    private void handleExit(int exitStatus)
+    {                              
+	    Lib.debug(dbgProcess, "handleExit()"); 
+	    //this for loop will close any of the file descriptors in the proccess 
+	    for (int i = 0; i < MAXFD; i++) 
+	    {                                  
+            if (fds[i].file != null)                                       
+                handleClose(i);                                            
+        }   
+        
+        UserProcess parentProcess = UserKernel.getProcessByID(this.ppid);
+        this.ppid = null; //setting parent process id to null
+        Iterator<int> ts = parentProcess.children.iterator();
+        while(ts.hasNext())
+        {                                              
+            int childpid = ts.next();                                  
+            if (childpid == this.pid) 
+            {                             
+                ts.remove();                                        
+                break;                                       
+            }                                                    
+        } 
+         while (!children.isEmpty())  
+        {                                     
+            childPid = children.removeFirst();                             
+            UserProcess childProcess = UserKernel.getProcessByID(childPid);
+            childProcess.ppid = null;                                      
+        }                                                                  
+
+        
+        this.exitStatus = exitStatus;                                      
+
+        
+        this.unloadSections();
+
+        
+        if (this.pid == ROOT)
+        {
+            Kernel.kernel.terminate(); 
+        }                                                                  
+        else 
+        {                                                             
+            Lib.assertTrue(KThread.currentThread() == this.thread);        
+            KThread.currentThread().finish();                              
+        }                                                                  
+
+        Lib.assertNotReached();                                           
+    }                                 
+	/*Saif Khan
+	implementation of exec:
+	*/
+    private int handleExec(int file, int argc, int argv) 
+    {                  
+	    Lib.debug(dbgProcess, "handleExec()");                              
+
+        if (argc < 1) 
+        {                                                     
+            Lib.debug(dbgProcess, "handleExec(): argc < 1");                
+            return -1;                                                      
+        }                                                                  
+
+        String filename = readVirtualMemoryString(file, MAXSTRLEN);         
+        if (filename == null)                                               
+            Lib.debug(dbgProcess, "handleExec()- missing the file name");        
+            return -1;                                                      
+        }                                                                   
+
+        //This if is to make sure no file has .coff
+        if (filename.substring(filename.length()-4, filename.length())     
+              != ".coff")
+	{                                                 
+            Lib.debug(dbgProcess,"handleExec()- the filename need to have the .coff");
+            return -1;                                                      
+        }                                                                  
+         
+        String args[] = new String[argc];                                   
+        byte   temp[] = new byte[4];                                        
+        for (int i = 0; i < argc; i++) 
+	{                                    
+            int cntBytes = readVirtualMemory(argv+i*4, temp);              
+            if (cntBytes != 4)
+	    {                                           
+                return -1;                                                
+            }                                                              
+
+            int argAddress = Lib.bytesToInt(temp, 0);                       
+            args[i] = readVirtualMemoryString(argAddress, MAXSTRLEN);      
+        }                                                                   
+
+        
+        this.children.add(childProcess);                                           
+        UserKernel.registerProcess(childProcess.pid, childProcess);         
+        boolean retval = this.execute(filename, args);                      
+
+        if (retval) 
+	{                                                       
+            return childProcess.pid;                                         
+        }                                                                  
+        else 
+	{                                                             
+            return -1;                                                     
+        }                                                                  
+    }   
+
+
+    /*Saif Khan
+	implementation of join:
+	*/
+    private int handleJoin(int childPid, int adrStatus) 
+    {                  
+	    Lib.debug(dbgProcess, "handleJoin()");
+	    boolean childFlag = false;                                         
+        Iterator<int> it = this.children.iterator();                       
+        while(it.hasNext()) 
+	{                                              
+            int childpid = it.next();                                     
+            if (childpid == this.pid)
+	    {                                  
+                childFlag = true;                                        
+                break;                                                    
+            }                                                              
+        }                                                                  
+                                                                           
+        if (childFlag == false) 
+	{                                          
+            Lib.debug(dbgProcess,"can not reference child proccess for current proccess");                        
+            return -1;                                                     
+        }                                                                  
+
+        UserProcess childProcess = UserKernel.getProcessByID(childpid);    
+        if (childProcess.ppid == null) 
+	{                                   
+            Lib.debug(dbgProcess, "the child is gone by the moment the call started");                           
+            return -2;                                                     
+        }                                                                  
+        childProcess.thread.join();                                        
+        byte temp[] = new byte[4];                                         
+        temp=Lib.bytesFromInt(childProcess.exitStatus);                    
+        int cntBytes = writeVirtualMemory(adrStatus, temp);                
+        if (cntBytes != 4)                                                 
+            return 1;                                                      
+        else                                                               
+           return 0;                                                       
+    }    
+
 
     /**
      * Handle the halt() system call.
