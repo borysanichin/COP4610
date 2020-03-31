@@ -105,6 +105,7 @@ public class UserProcess {
 
 	for (int length = 0; length < bytesRead; length++) {
 	    if (bytes[length] == 0) {
+	    	System.out.println("bytes[length] == 0");
 	    	return new String(bytes, 0, length);
 	    }
 	}
@@ -359,12 +360,14 @@ public class UserProcess {
     
     //*Borys Anichin*//
     private int handleCreate(int address) {
-    	System.out.println("in handleCreatet()");                    
+    	System.out.println("in handleCreate()");                    
         String fileName = readVirtualMemoryString(address, maxStringLength);
+        System.out.println("File name is " + fileName); 
 
-        OpenFile file  = ThreadedKernel.fileSystem.open("new", true);
+        OpenFile file  = ThreadedKernel.fileSystem.open(fileName, true);
 
         if (file == null) {
+        	System.out.println("File is null"); 
             return -1;
         }
         
@@ -391,6 +394,7 @@ public class UserProcess {
         OpenFile file  = ThreadedKernel.fileSystem.open("fileName", false);
 
         if (file == null) {
+        	System.out.println("File is null"); 
             return -1;
         }
         
@@ -412,7 +416,7 @@ public class UserProcess {
     private int handleRead(int fileDescriptorId, int address, int numberOfBytesRequested) {
 	    
         if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
-                || fileDescriptors[fileDescriptorId].file == null){
+                || fileDescriptors[fileDescriptorId].file == null || numberOfBytesRequested < 0){
             return -1;
         }
 
@@ -439,7 +443,7 @@ public class UserProcess {
     private int handleWrite(int fileDescriptorId, int address, int bufferSize) {
     	
         if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
-                || fileDescriptors[fileDescriptorId].file == null) {
+                || fileDescriptors[fileDescriptorId].file == null || bufferSize < 0) {
             return -1;
         }
 
@@ -448,7 +452,6 @@ public class UserProcess {
         byte[] buffer = new byte[bufferSize];
 
         int numberOfBytesRead = readVirtualMemory(address, buffer);
-
 
         int numberOfBytesWritten = fileDescriptor.file.write(buffer, 0, numberOfBytesRead);
 
