@@ -360,7 +360,7 @@ public class UserProcess {
     
     //*Borys Anichin*//
     private int handleCreate(int address) {
-    	System.out.println("in handleCreatet()");                    
+    	System.out.println("in handleCreate()");                    
         String fileName = readVirtualMemoryString(address, maxStringLength);
         System.out.println("File name is " + fileName); 
 
@@ -416,12 +416,8 @@ public class UserProcess {
     private int handleRead(int fileDescriptorId, int address, int numberOfBytesRequested) {
 	    
         if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
-                || fileDescriptors[fileDescriptorId].file == null){
+                || fileDescriptors[fileDescriptorId].file == null || numberOfBytesRequested < 0){
             return -1;
-        }
-        
-        if (numberOfBytesRequested < 0) {
-        	return -1;
         }
 
         FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
@@ -447,12 +443,8 @@ public class UserProcess {
     private int handleWrite(int fileDescriptorId, int address, int bufferSize) {
     	
         if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
-                || fileDescriptors[fileDescriptorId].file == null) {
+                || fileDescriptors[fileDescriptorId].file == null || bufferSize < 0) {
             return -1;
-        }
-        
-        if(bufferSize < 0) {
-        	return -1;
         }
 
         FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
@@ -460,7 +452,6 @@ public class UserProcess {
         byte[] buffer = new byte[bufferSize];
 
         int numberOfBytesRead = readVirtualMemory(address, buffer);
-
 
         int numberOfBytesWritten = fileDescriptor.file.write(buffer, 0, numberOfBytesRead);
 

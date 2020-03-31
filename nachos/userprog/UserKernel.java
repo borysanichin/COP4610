@@ -47,10 +47,10 @@ public class UserKernel extends ThreadedKernel {
 	while (c != 'q');
 
 	System.out.println("");*/
-	UserProcess userProcess = new UserProcess();
-	userProcess.handleSyscall(4, 0, 2, 2, 2);
-	userProcess.handleSyscall(5, 0, 2, 2, 2);
-	userProcess.handleSyscall(6, 0, 1, 2, 0);
+	//UserProcess userProcess = new UserProcess();
+	//userProcess.handleSyscall(4, 0, 2, 2, 2);
+	//userProcess.handleSyscall(5, 0, 2, 2, 2);
+	//userProcess.handleSyscall(6, 0, 1, 2, 0);
 	
     }
 
