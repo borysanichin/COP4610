@@ -105,6 +105,7 @@ public class UserProcess {
 
 	for (int length = 0; length < bytesRead; length++) {
 	    if (bytes[length] == 0) {
+	    	System.out.println("bytes[length] == 0");
 	    	return new String(bytes, 0, length);
 	    }
 	}
@@ -361,10 +362,12 @@ public class UserProcess {
     private int handleCreate(int address) {
     	System.out.println("in handleCreatet()");                    
         String fileName = readVirtualMemoryString(address, maxStringLength);
+        System.out.println("File name is " + fileName); 
 
-        OpenFile file  = ThreadedKernel.fileSystem.open("new", true);
+        OpenFile file  = ThreadedKernel.fileSystem.open(fileName, true);
 
         if (file == null) {
+        	System.out.println("File is null"); 
             return -1;
         }
         
@@ -391,6 +394,7 @@ public class UserProcess {
         OpenFile file  = ThreadedKernel.fileSystem.open("fileName", false);
 
         if (file == null) {
+        	System.out.println("File is null"); 
             return -1;
         }
         
@@ -414,6 +418,10 @@ public class UserProcess {
         if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
                 || fileDescriptors[fileDescriptorId].file == null){
             return -1;
+        }
+        
+        if (numberOfBytesRequested < 0) {
+        	return -1;
         }
 
         FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
@@ -441,6 +449,10 @@ public class UserProcess {
         if (fileDescriptorId < 0 || fileDescriptorId >= maxOpenedFiles
                 || fileDescriptors[fileDescriptorId].file == null) {
             return -1;
+        }
+        
+        if(bufferSize < 0) {
+        	return -1;
         }
 
         FileDescriptor fileDescriptor = fileDescriptors[fileDescriptorId];
